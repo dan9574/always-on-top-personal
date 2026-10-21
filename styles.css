@@ -1,368 +1,147 @@
-/* Always-on-Top Tasks.
-   Все селекторы под скоупом .tfa-overlay / body:has(.tfa-overlay) / .tfa-statusbar —
-   остальное главное окно Obsidian не затрагивается. */
-
-/* ---- окно overlay: убрать лишний хром (только в popout с нашей вьюхой) ----
-   Класс на body ставить нельзя: Obsidian периодически переписывает классы
-   body у popout-окон, синхронизируя их с главным. Поэтому :has(). */
-
-body.is-popout-window:has(.tfa-overlay) .workspace-tab-header-container,
-body.is-popout-window:has(.tfa-overlay) .view-header,
-body.is-popout-window:has(.tfa-overlay) .titlebar {
-  display: none;
-}
-
-body.is-popout-window:has(.tfa-overlay) .workspace-tabs {
-  padding: 0;
-}
-
-/* macOS без рамки: светофор остаётся поверх окна — шапка отступает под него */
-body.is-popout-window.is-hidden-frameless:has(.tfa-overlay) .tfa-header {
-  padding-left: var(--frame-left-space, 72px);
-}
-
-/* ---- содержимое ---- */
-
-.tfa-overlay {
-  padding: 0 12px 10px;
-  /* размер приходит из настроек одной переменной; сниппет темы может перебить */
-  font-size: var(--tfa-font-size, 13px);
+/* Scope chrome removal to our popout. Obsidian synchronizes body classes,
+   so derive ownership from the native note's marker instead. */
+body.is-popout-window:has(.ppn-note) .workspace-tab-header-container,
+body.is-popout-window:has(.ppn-note) .titlebar,
+.ppn-note > .view-header { display: none !important; }
+body.is-popout-window:has(.ppn-note) .workspace-tabs { padding-top: 0; }
+body.is-popout-window:has(.ppn-note) .workspace-tab-container { padding: 0; }
+.ppn-note {
+  --ppn-side-space: 10px;
+  --ppn-scrollbar-size: 4px;
+  --font-text-size: 13px;
+  --font-smallest: 11px;
+  --line-height-normal: 1.35;
+  --line-height-tight: 1.35;
+  --h1-size: 1.05em;
+  --h2-size: 1.05em;
+  --h3-size: 1.05em;
+  --h4-size: 1.05em;
+  --h5-size: 1.05em;
+  --h6-size: 1.05em;
+  --p-spacing: 4px;
+  --heading-spacing: 8px;
+  --list-spacing: 2px;
+  --file-margins: 8px 10px;
+  /* The main theme's readable-line width adds another pair of margins. */
+  --file-line-width: 100%;
+  --line-width: 100%;
+  --max-width: 100%;
+  --file-header-font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
-  user-select: none;
 }
-
-.tfa-overlay .tfa-md {
-  opacity: 0.75;
-  margin: 4px 0;
-}
-
-.tfa-overlay .tfa-md p {
-  margin: 4px 0;
-}
-
-.tfa-overlay .tfa-md h1,
-.tfa-overlay .tfa-md h2,
-.tfa-overlay .tfa-md h3 {
-  margin: 8px 0 4px;
-  font-size: 1.05em;
-}
-
-.tfa-overlay .tfa-empty {
-  color: var(--text-muted);
-  padding: 16px 4px;
-}
-
-/* ---- верхний блок: шапка, прогресс, текущая задача ---- */
-
-/* прибит к верху окна — виден всегда, независимо от скролла */
-.tfa-overlay .tfa-top {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  margin-bottom: 4px;
-  background: var(--background-primary);
+.ppn-note .inline-title,
+.ppn-note .metadata-container,
+.ppn-note .markdown-preview-view .mod-header,
+.ppn-note .obsidian-banner,
+.ppn-note .obsidian-banner-spacer,
+.ppn-note .obsidian-banner-icon { display: none !important; }
+.ppn-note .obsidian-banner-wrapper { margin-top: 0 !important; padding-top: 0 !important; }
+.ppn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.tfa-overlay .tfa-header {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 0 4px;
-  /* за шапку окно можно таскать — так работает свободный режим */
-  -webkit-app-region: drag;
-}
-
-.tfa-overlay .tfa-header-title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-muted);
-  font-size: 0.92em;
-  font-weight: 600;
-  padding-left: 2px;
-}
-
-.tfa-overlay .tfa-icon-btn {
-  color: var(--text-faint);
+  background: var(--background-primary);
   -webkit-app-region: no-drag;
+  user-select: none;
+  touch-action: none;
+  cursor: move;
 }
-
-.tfa-overlay .tfa-icon-btn:hover {
-  color: var(--text-normal);
-}
-
-.tfa-overlay .tfa-icon-btn .svg-icon {
-  width: 15px;
-  height: 15px;
-}
-
-/* тонкая полоска сделано/всего */
-.tfa-overlay .tfa-progress {
-  height: 3px;
-  margin: 0 2px 2px;
-  border-radius: 2px;
-  background: var(--background-modifier-border);
-  overflow: hidden;
-}
-
-.tfa-overlay .tfa-progress-fill {
-  height: 100%;
-  width: var(--tfa-progress, 0%);
-  background: var(--interactive-accent);
-  transition: width 200ms ease;
-}
-
-/* строка с текущей задачей — есть только пока бежит таймер */
-.tfa-overlay .tfa-pinned {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 2px;
-  border-top: 1px solid var(--background-modifier-border);
-}
-
-/* длинное название не должно раздувать шапку — одна строка с многоточием */
-.tfa-overlay .tfa-pinned-text {
+.ppn-title {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-muted);
+  font-family: var(--font-interface);
   font-weight: 600;
+  font-size: 12px;
 }
-
-/* ---- строка задачи ---- */
-
-.tfa-overlay .tfa-task {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  /* глубина вложенности приходит из JS одной переменной, а не инлайн-стилем */
-  padding: 2px 2px 2px calc(2px + var(--tfa-indent, 0px));
-  border-radius: 6px;
-  min-height: 30px;
+.ppn-toolbar button {
+  padding: 5px;
+  height: 24px;
+  width: 24px;
+  box-shadow: none;
+  background: transparent;
+  color: var(--text-muted);
+  -webkit-app-region: no-drag;
+  cursor: pointer;
 }
-
-.tfa-overlay .tfa-task:hover {
-  background: var(--background-modifier-hover);
-}
-
-/* активная задача (бежит таймер) — заметно подсвечена */
-.tfa-overlay .tfa-task.tfa-running {
-  background: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
-  box-shadow: inset 2px 0 0 var(--interactive-accent);
-}
-
-.tfa-overlay .tfa-task.tfa-done .tfa-text {
-  text-decoration: line-through;
-  opacity: 0.55;
-}
-
-.tfa-overlay .tfa-text {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-/* время — синим, моноширинно, секунды тикают */
-.tfa-overlay .tfa-time {
-  color: var(--color-blue, #2f81f7);
-  font-variant-numeric: tabular-nums;
-  font-size: 0.92em;
-  white-space: nowrap;
-}
-
-/* ---- кнопки: видны всегда, hit-target ≥ 28px ---- */
-
-.tfa-overlay .tfa-btn {
-  width: 26px;
-  height: 28px;
-  min-width: 26px;
+.ppn-toolbar button:hover { background: var(--background-modifier-hover); }
+.ppn-toolbar button .svg-icon { width: 15px; height: 15px; }
+.ppn-toolbar button[aria-pressed="true"] { color: var(--interactive-accent); }
+.ppn-toolbar button:focus-visible { outline: 2px solid var(--interactive-accent); }
+.ppn-note .markdown-preview-view.ppn-hide-completed li.task-list-item[data-task="x"],
+.ppn-note .markdown-preview-view.ppn-hide-completed li.task-list-item[data-task="X"] { display: none; }
+.ppn-note .markdown-preview-view.ppn-hide-completed li.task-list-item:has(li.task-list-item[data-task=" "]) { display: list-item; }
+.ppn-note .markdown-source-view, .ppn-note .markdown-preview-view {
+  font-size: 13px;
+  line-height: 1.35;
   padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  opacity: 0.85;
 }
-
-.tfa-overlay .tfa-btn:hover {
-  background: var(--background-modifier-hover);
-  opacity: 1;
+.ppn-note .markdown-source-view.mod-cm6 .cm-scroller {
+  padding: 8px calc(var(--ppn-side-space) - var(--ppn-scrollbar-size));
+  font-size: 13px;
+  line-height: 1.35;
 }
-
-.tfa-overlay .tfa-check {
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  margin: 0 0 0 2px;
-  cursor: pointer;
+.ppn-note .markdown-source-view.mod-cm6 .cm-content { padding: 0; }
+.ppn-note .markdown-source-view.mod-cm6 .cm-sizer {
+  max-width: none !important;
+  margin-inline: 0 !important;
 }
-
-.tfa-overlay .tfa-timer {
-  color: var(--text-faint);
-  font-size: 11px;
-}
-
-.tfa-overlay .tfa-timer:hover {
-  color: var(--text-normal);
-}
-
-/* пустой статус — едва заметная точка-кружок, ширина та же (текст не прыгает) */
-.tfa-overlay .tfa-emoji-empty {
-  opacity: 0.25;
-  font-size: 11px;
-}
-
-.tfa-overlay .tfa-emoji-empty:hover {
-  opacity: 0.8;
-}
-
-.tfa-overlay .tfa-timer-on {
-  color: var(--interactive-accent);
-}
-
-/* ---- инлайн-полоска эмодзи ---- */
-
-.tfa-overlay .tfa-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  padding: 4px 6px;
-  margin: 0 0 4px 24px;
-  border-radius: 8px;
-  background: var(--background-secondary);
-}
-
-.tfa-overlay .tfa-strip-btn {
-  font-size: 15px;
-}
-
-/* «без статуса» — пустой кружочек, как у задач без эмодзи */
-.tfa-overlay .tfa-strip-remove {
-  opacity: 0.45;
-  font-size: 12px;
-}
-
-.tfa-overlay .tfa-strip-remove:hover {
-  opacity: 1;
-}
-
-/* ---- добавление и редактирование задач ---- */
-
-/* прибита к низу окна — видна всегда, независимо от скролла */
-.tfa-overlay .tfa-add {
-  position: sticky;
-  bottom: 0;
-  padding: 6px 2px;
-  background: var(--background-primary);
-  border-top: 1px solid var(--background-modifier-border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* счётчик сделано/всего и суммарное время в футере */
-.tfa-overlay .tfa-count {
-  color: var(--text-faint);
-  font-size: 0.92em;
-  white-space: nowrap;
-}
-
-.tfa-overlay .tfa-total {
-  color: var(--color-blue, #2f81f7);
-  font-variant-numeric: tabular-nums;
-  font-size: 0.92em;
-  white-space: nowrap;
-  padding-right: 4px;
-}
-
-.tfa-overlay .tfa-add-btn {
-  flex: 1;
-  height: 30px;
-  padding: 0 8px;
-  text-align: left;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 1em;
-}
-
-.tfa-overlay .tfa-add-btn:hover {
-  color: var(--text-normal);
-  background: var(--background-modifier-hover);
-}
-
-.tfa-overlay .tfa-input {
-  flex: 1;
+.ppn-note .markdown-source-view.mod-cm6 .cm-line { line-height: 1.35; }
+/* Compact the user's existing inline task controls within this window only. */
+.ppn-note .office-flow-task-actions {
   min-width: 0;
-  width: 100%;
-  height: 28px;
-  padding: 0 6px;
-  font-size: 1em;
-  background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  user-select: text;
-}
-
-.tfa-overlay .tfa-input:focus {
-  border-color: var(--interactive-accent);
-  outline: none;
-}
-
-/* ---- перерыв ---- */
-
-.tfa-overlay .tfa-break {
-  width: auto;
-  min-width: 28px;
-  padding: 0 6px;
-  font-size: 12px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.tfa-overlay .tfa-break-on {
-  color: var(--color-orange, #d29922);
-  background: color-mix(in srgb, var(--color-orange, #d29922) 12%, transparent);
-}
-
-/* сессия дольше порога — время задачи янтарным, намёк на паузу */
-.tfa-overlay .tfa-time-overdue {
-  color: var(--color-orange, #d29922);
-}
-
-/* ---- вкладка настроек (адаптер для Obsidian < 1.13) ---- */
-
-.tfa-slider-value {
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-  margin-right: 8px;
-}
-
-/* ---- статус-бар главного окна ---- */
-
-.tfa-statusbar {
-  display: inline-flex;
-  align-items: center;
   gap: 2px;
-  font-variant-numeric: tabular-nums;
+  margin-inline: 3px;
+  padding: 0 2px;
+  box-shadow: none;
 }
-
-.tfa-statusbar .tfa-statusbar-icon .svg-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--interactive-accent);
+.ppn-note .office-flow-task-action-button { width: 16px; height: 16px; font-size: 11px; }
+.ppn-note .markdown-source-view.mod-cm6 .cm-line.HyperMD-header { padding-block: 4px 2px; }
+.ppn-note .markdown-preview-view .markdown-preview-sizer {
+  min-height: 0 !important;
+  padding: 4px calc(var(--ppn-side-space) - var(--ppn-scrollbar-size)) 0 !important;
+  width: 100%;
+  max-width: none !important;
+  box-sizing: border-box;
+  margin: 0;
+}
+.ppn-note .markdown-preview-view .mod-footer { display: none; }
+/* Keep native heading folding reachable inside the compact 10px side space. */
+.ppn-note .markdown-preview-view .heading-collapse-indicator {
+  margin-inline-start: -6px;
+  padding: 0;
+  width: 6px;
+}
+.ppn-note .markdown-preview-view .heading-collapse-indicator .svg-icon { width: 6px; }
+.ppn-note .markdown-preview-view .office-flow-progress { margin-top: 0; }
+.ppn-note .markdown-source-view .cm-embed-block:has(.office-flow-progress) { margin-block: 0; padding: 0; }
+.ppn-note .markdown-source-view .office-flow-progress { margin-block: 0; }
+.ppn-note .markdown-preview-view p { margin-block: 4px; }
+.ppn-note .markdown-preview-view :is(ul, ol) { margin-block: 4px; }
+.ppn-note .markdown-preview-view :is(h1, h2, h3, h4, h5, h6) {
+  margin-block: 8px 4px;
+  font-size: 1.05em;
+  line-height: 1.35;
+}
+/* Obsidian reserves a right-hand gutter even when its thumb is transparent.
+   Mirror the fixed 4px gutter and count it INSIDE each 10px side space.
+   Use WebKit sizing: standard `thin` is platform-sized and overrides it. */
+.ppn-note .markdown-source-view.mod-cm6 .cm-scroller,
+.ppn-note .markdown-preview-view {
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+.ppn-note :is(.cm-scroller, .markdown-preview-view)::-webkit-scrollbar { width: var(--ppn-scrollbar-size); height: var(--ppn-scrollbar-size); }
+.ppn-note :is(.cm-scroller, .markdown-preview-view)::-webkit-scrollbar-track { background: transparent; }
+.ppn-note :is(.cm-scroller, .markdown-preview-view)::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+.ppn-note :is(.cm-scroller, .markdown-preview-view):hover::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
 }

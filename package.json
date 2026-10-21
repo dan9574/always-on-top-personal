@@ -1,7 +1,7 @@
 {
-  "name": "tasks-for-focus-adhd",
-  "version": "0.7.0",
-  "description": "Obsidian plugin: pin a note as an always-on-top focus overlay with per-task stopwatch and emoji status",
+  "name": "personal-pinned-notes",
+  "version": "0.1.0",
+  "description": "Native editable pinned notes with a global Ctrl+D toggle.",
   "main": "main.js",
   "type": "module",
   "scripts": {
@@ -10,8 +10,7 @@
     "lint": "eslint src tests",
     "check": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "install-local": "node scripts/install-local.mjs",
-    "bump": "node scripts/bump-version.mjs"
+    "package": "npm run build && node scripts/package.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -21,6 +20,8 @@
     "obsidian": "latest",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.68.0",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "@codemirror/state": "6.5.0",
+    "@codemirror/view": "6.38.6"
   }
 }

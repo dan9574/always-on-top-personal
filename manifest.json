@@ -1,10 +1,9 @@
 {
-  "id": "tasks-for-focus-adhd",
-  "name": "Always-on-Top Tasks",
-  "version": "0.7.0",
-  "minAppVersion": "1.4.10",
-  "description": "Pin a note as an always-on-top focus overlay with per-task stopwatch and emoji status.",
-  "author": "n23eos",
-  "isDesktopOnly": true,
-  "authorUrl": "https://github.com/n23eos"
+  "id": "personal-pinned-notes",
+  "name": "Pinned Notes Personal",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.1",
+  "description": "A native editable note window with always-on-top controls and a global Ctrl+D toggle.",
+  "author": "dan9574",
+  "isDesktopOnly": true
 }

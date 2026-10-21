@@ -1,8 +1,15 @@
 # Obsidian plugin (the repository root is the plugin root)
 node_modules/
+old/
+dist/
 main.js
+background.cjs
 .env
+.env.*
 data.json
+.obsidian/
+*.log
+work/
 
 # macOS app
 macos/.build/

@@ -22,6 +22,7 @@ const externals = [
 ];
 
 const context = await esbuild.context({
+  platform: "node",
   entryPoints: ["src/main.ts"],
   bundle: true,
   external: externals,
@@ -33,9 +34,21 @@ const context = await esbuild.context({
   outfile: "main.js",
 });
 
+const background = await esbuild.context({
+  entryPoints: ["src/background-entry.ts"],
+  bundle: true,
+  platform: "node",
+  external: ["electron"],
+  format: "cjs",
+  target: "es2021",
+  outfile: "background.cjs",
+});
+
 if (isProduction) {
   await context.rebuild();
+  await background.rebuild();
   process.exit(0);
 } else {
   await context.watch();
+  await background.watch();
 }

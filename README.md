@@ -1,222 +1,129 @@
-# Always-on-Top Tasks
+# Pinned Notes Personal · 置顶笔记
 
-**Always-on-Top Tasks is an Obsidian plugin that pins one note above every other window as a compact, semi-transparent overlay docked to the edge of the screen.** Every task line gets its own stopwatch: press play, work, press stop, and the elapsed time is appended to the line as ⏱️ H:MM:SS, with only one timer allowed to run at a time. A one-click emoji palette marks a line as in progress, blocked, deferred or done, and nested tasks keep their markdown indentation in the overlay. All of it is written back into the markdown file, so the time data stays plain text inside the vault and any assistant with access to the notes can read it. Desktop only, TypeScript bundled with esbuild.
+把 Obsidian 原生笔记变成紧凑的桌面浮窗：**全局 Ctrl+D 开关、置顶、默认只读、随时编辑，保留标题和缩进列表折叠**。
 
-<div align="center">
+独立插件 ID：`personal-pinned-notes`。原插件更新不会覆盖它；没有计时器和专注会话。源自 MIT 项目 [obsidian-always-on-top-tasks](https://github.com/n23eos/obsidian-always-on-top-tasks)，由本仓库独立维护，与原作者无隶属关系。来源见 [NOTICE.md](NOTICE.md)，许可见 [LICENSE](LICENSE)。
 
-[![Star on GitHub](https://img.shields.io/github/stars/n23eos/obsidian-always-on-top-tasks?style=for-the-badge&logo=github&label=Star%20this%20repo&color=FFD700&labelColor=1a1a1a)](https://github.com/n23eos/obsidian-always-on-top-tasks)
+## 支持范围
 
-</div>
+| 环境 / 功能 | 状态 |
+| --- | --- |
+| Windows 桌面 / Obsidian 1.14.4 | 已实测浮窗、全局快捷键、置顶、编辑保存、原生折叠、后台运行 |
+| Windows 登录后后台启动 | 已实现，自动测试通过；尚未完成实际登录 / 冷启动验收 |
+| macOS / Linux | 尚未适配和验证，不承诺可用；安装脚本仅支持 Windows |
+| 手机 / 平板 | 不支持 |
 
-## The problems this solves
+需要本机桌面版 Obsidian 和一个已经打开过的笔记库。清单声明最低版本 1.5.1，但目前实测版本仅为 1.14.4。使用了宿主未公开的 Electron remote 桥接，Obsidian 升级后可能需要适配。
 
-**You lose the thread when several projects are open at once.** The moment a
-browser, a terminal or a chat window covers your task list, the current task is
-gone from your head too. The overlay stays above every other window, including
-fullscreen apps, pinned to one half of the monitor — so what you are doing right
-now never leaves your field of view.
+## 交给 AI 安装
 
-**You do not know where the hours actually went.** Each task line has its own
-stopwatch: press ▶, work, press ⏹. The elapsed time is appended to the line as
-`⏱️ H:MM:SS`, sessions add up to the second, and only one timer can run at a
-time — which is the entire point of focusing.
+将下面整段交给能操作本机文件和终端的 AI。首次允许社区插件时，可能需要你在 Obsidian 界面完成操作。
 
-**Your time data is locked inside somebody else's app.** Here it is stored as
-plain text inside your own vault, so anything that can read the vault can read
-the numbers — including an AI agent. Ask Claude (or any assistant with access to
-your notes) where last week went, and it can answer from the note itself. No
-export, no API, no separate database.
-
-**A flat checklist does not match the shape of real work.** Nested tasks keep
-their markdown indentation in the overlay, and a one-click emoji palette marks
-what is in progress, blocked, deferred or done — right in the line, readable in
-any editor.
-
-## What it looks like
-
-![The overlay pinned above another window](docs/screenshots/overlay-pinned.png)
-
-*The overlay is docked to the right edge and floats above whatever you are
-working in. It never hides behind the window you switch to.*
-
-![The pinned header showing the running task](docs/screenshots/running-task.png)
-
-*While a timer runs, a sticky header keeps the current task and its ticking time
-at the top, no matter how far the note is scrolled. The footer counts finished
-tasks and the total time of the note.*
-
-![The inline emoji status palette](docs/screenshots/emoji-status.png)
-
-*One click on the status button opens an inline palette. The chosen emoji is
-written into the task line, so the status is visible in plain Obsidian too.*
-
-![The break stopwatch running in the footer](docs/screenshots/breaks.png)
-
-*The optional ☕ button stops the task timer and starts a break stopwatch. Total
-break time accumulates in the note, and a long work session gets a gentle
-reminder instead of a forced pomodoro stop.*
-
-![The same note as raw markdown](docs/screenshots/markdown-source.png)
-
-*The same note in a normal editor. No hidden database, no sidecar files — which
-is what makes the data readable by other tools and by AI agents.*
-
-<sub>Screenshots are rendered from the plugin's own `styles.css` by
-[`docs/screenshots/render.mjs`](docs/screenshots/render.mjs).</sub>
-
-## Data format
-
-A task line is ordinary markdown: a checkbox, an optional status emoji, the
-text, and the accumulated time at the end.
-
-```markdown
-- [ ] 🔵 Ship the payments hotfix ⏱️ 0:41:12
-  - [ ] ✅ reproduce on staging ⏱️ 0:12:40
-- [x] ✅ Reply on Slack ⏱️ 0:04:18
-
-☕ 0:22:10
+```text
+请安装 https://github.com/dan9574/always-on-top-personal 的最新发布版。
+先完整阅读仓库 README.md，按其中“AI 安装约定”执行。
+我的 Obsidian 笔记库路径是：<填写完整路径>。
+安装并启用 personal-pinned-notes，保留现有设置和笔记，完成后验证 Ctrl+D。
+默认不设置登录自启动；只有我明确要求时才配置。
 ```
 
-Statuses: ⬜ not started · 🔄 in progress · ⏸️ paused · 🔜 deferred · ⛔ blocked ·
-✅ done · ❗ important · 🔴 🟠 🟡 🟢 🔵 🟣 colour labels.
+### AI 安装约定
 
-The plugin stores nothing else in the note — no ids, no metadata blocks. Its
-`data.json` holds only your settings and the one running timer, so that a timer
-survives an Obsidian restart.
+1. 先确认 Windows 和目标笔记库。使用用户提供的路径；未指定时，可只读检查 `%APPDATA%\obsidian\obsidian.json` 的 `vaults` 映射。多个候选且无法确定目标时询问用户。默认配置目录是 `.obsidian`；自定义目录需传 `-ConfigDir`。
+2. 从 [最新 Release](https://github.com/dan9574/always-on-top-personal/releases/latest) 下载 `personal-pinned-notes.zip` 和 `SHA256SUMS.txt`，校验 ZIP 的 SHA-256，再解压到独立临时目录。不要使用 GitHub 自动生成的 Source code ZIP 代替安装包；它不含编译后的 JavaScript。
+3. 阅读安装脚本，用 `-DryRun` 检查目标。安装前正常完全退出 Obsidian：本插件托盘或浮窗标题右键 → **完全退出 Obsidian**。主窗口的 × 可能只是隐藏。不要直接强制结束进程；有未保存工作时让用户正常退出。
+4. 从解压出的 `personal-pinned-notes` 目录执行下方安装命令。脚本只复制四个运行文件，备份旧插件，保留 `data.json` 和笔记；`-Enable` 在现有社区插件列表中追加本插件，不替换其他条目，也不自动关闭受限模式。
+5. 重新启动目标库，必要时在设置 → 第三方插件中允许社区插件并启用 **Pinned Notes Personal**。打开 Markdown 笔记，再测试验收项目。只复制文件不等于运行验收成功；没有 UI 能力时告知用户尚需手动验证。
+6. 不修改其他插件、不上传笔记或设置、不自动配置登录自启动。不接管已被其他程序或库占用的 Ctrl+D；冲突时报告原因，保留左侧按钮入口。
 
-## Installation
+## 一条命令安装
 
-Desktop only.
+下载并解压 [安装包](https://github.com/dan9574/always-on-top-personal/releases/latest/download/personal-pinned-notes.zip)，**完全退出 Obsidian**，在解压出的 `personal-pinned-notes` 目录打开 PowerShell。将示例路径换成实际笔记库：
 
-**Settings → Community plugins → Browse**, search for "Always-on-Top Tasks",
-install and enable.
-
-To install manually instead:
-
-```bash
-git clone https://github.com/n23eos/obsidian-always-on-top-tasks
-cd obsidian-always-on-top-tasks
-npm install
-npm run build
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -VaultPath "D:\Notes\MyVault" -Enable
 ```
 
-Copy `manifest.json`, `main.js` and `styles.css` into
-`<your vault>/.obsidian/plugins/tasks-for-focus-adhd/`, then enable the plugin in
-**Settings → Community plugins**. Prebuilt files are also attached to every
-[release](https://github.com/n23eos/obsidian-always-on-top-tasks/releases).
+不需要 Git、Node.js 或管理员权限。执行策略只作用于此次 PowerShell 进程。预览而不写入：末尾加 `-DryRun`。自定义配置目录追加例如 `-ConfigDir ".obsidian-work"`。省略 `-Enable` 则只安装文件，之后在 Obsidian 中手动启用。
 
-## Commands
+安装目标：`<笔记库>/<配置目录>/plugins/personal-pinned-notes/`。
 
-| Command | What it does |
-|---|---|
-| **Open current note as focus overlay** | Pins the active note; the path is remembered for next time |
-| **Toggle focus overlay** | Shows or hides the overlay — worth binding to a hotkey. The target icon in the ribbon does the same |
-| **Toggle always on top** | Lets the overlay drop behind other windows for a moment without closing it; the pin button in the overlay header does the same |
-| **Stop the running timer** | Commits the session from anywhere — the status bar item in the main window does the same on click |
-| **Toggle completed tasks in the overlay** | Hides or shows checked tasks; the eye button in the overlay header does the same |
-
-None of the commands ships with a default hotkey; bind your own in
-**Settings → Hotkeys**.
-
-## Settings
-
-Grouped into four sections. On Obsidian 1.13 and later every setting is also
-found by the settings search; older versions get the same tab drawn the classic
-way, so the plugin keeps working from Obsidian 1.4.
-
-**Overlay window** — the note to pin (with a file picker), position (docked to
-the right or left edge, or *free*: the window stays wherever you drag it, and
-the place is remembered), width of the docked overlay, opacity.
-
-**Timer and breaks** — the running timer in the main window's status bar,
-breaks and the reminder threshold.
-
-**Appearance** — font size, hide completed tasks, tasks only (skip the prose
-between tasks), the emoji status button, your own status emoji palette, the
-ribbon icon.
-
-**Advanced** — two experimental switches, click-through and never-take-focus,
-off by default, and a reset to defaults that keeps the pinned note and a
-running timer.
-
-## Behaviour worth knowing
-
-- **One timer at a time.** Starting a timer commits and stops the previous one.
-- **Checking a task stops its timer** and writes the session first.
-- **A running timer survives a restart** of Obsidian.
-- **The plugin never loses time silently.** If the task line was renamed or
-  duplicated while the timer ran, you get a notice with the exact session length
-  instead of a wrong write. A session longer than two hours is committed with a
-  "looks like the timer was left running" warning.
-- **Editing is one click.** Click the task text to rename it in place; the
-  footer has a field for adding new tasks.
-- **The header is a handle.** Drag the overlay by its header; in the *free*
-  position mode it stays where you leave it, and a saved position on a monitor
-  that is no longer connected falls back to the right edge.
-
-## Platform limitations
-
-- **Desktop only.** The overlay needs Electron window APIs, which mobile
-  Obsidian does not have.
-- **Clicking the overlay activates Obsidian.** Electron has no equivalent of a
-  macOS non-activating panel. Focus is released right after each button click,
-  but that one focus switch is unavoidable.
-- **Linux/Wayland:** whether a window can stay on top is up to your window
-  manager.
-- The always-on-top behaviour uses Electron APIs that are not part of the public
-  Obsidian plugin API. Every call is guarded: if a future Obsidian version breaks
-  them, the plugin degrades to a normal, unpinned window instead of failing.
-
-## Development
-
-```bash
-npm install
-npm run dev     # watch build
-npm test        # vitest — unit tests for the pure core
-npm run check   # tsc --noEmit
-npm run lint    # typescript-eslint + eslint-plugin-obsidianmd, the rules ObsidianReviewBot runs
+```text
+personal-pinned-notes/
+  main.js
+  background.cjs     ← 必须安装，不能遗漏
+  manifest.json
+  styles.css
+  data.json          ← 运行后保存个人设置，安装时保留
 ```
 
+也可以手动复制前四个文件。每次升级都需完全退出再启动 Obsidian，重新加载插件不能清除主进程中的 `background.cjs` 缓存。
+
+### 安装后验收
+
+- 点击左侧“开关置顶笔记”，当前 Markdown 笔记出现在浮窗中，默认只读。
+- 切到其他软件，按 **Ctrl+D** 隐藏 / 显示浮窗；不出现第二扇浮窗，也不拉起主窗口。
+- 图钉切换置顶；铅笔切换编辑；完成按钮保存并回到阅读模式；眼睛隐藏 / 显示已完成任务，不删除正文。
+- 开启 Obsidian 编辑器的“折叠标题”和“折叠缩进”后，验证标题及缩进列表折叠。
+- 关闭主窗口后仍可 Ctrl+D 开关；托盘或标题右键“完全退出 Obsidian”后，程序退出，Ctrl+D 不再生效。
+
+## 使用方式
+
+只有一个全局快捷键：**Ctrl+D**。注册成功后会替代其他软件原有的 Ctrl+D；停用插件会释放。Obsidian 必须正在运行，快捷键本身不会启动 Obsidian。多库同时启用时只能有一个库成功占用它。
+
+浮窗记住最后打开的笔记、位置和尺寸。拖动标题移动窗口；手动调整大小后保持你的尺寸，双击标题恢复按内容自动调整高度。每次重新打开回到只读模式；编辑使用 Obsidian 原生实时预览。Office Flow 是可选的独立插件，本项目不附带它。
+
+浮窗隐藏原生窗口控制栏，默认宽 340px、95% 不透明度、13px 正文，左右留白 10px；滚动条悬停时显示。眼睛只改变显示，带未完成子任务的父项保留。浮窗 × 是保存后隐藏，不是退出应用。
+
+关闭主窗口会隐藏到后台，Obsidian 继续占用内存。托盘“置顶笔记”或浮窗标题右键可显示主窗口、开关浮窗、完全退出。停用插件会撤销关闭拦截并恢复隐藏的主窗口。旧插件也在运行时可能出现另一套浮窗，可自行停用以减少重复入口。
+
+## 可选：Windows 登录后后台启动
+
+**此功能尚待实际登录 / 冷启动验收。** 先完成普通安装并启用插件。插件只能在加载后隐藏窗口，不能保证启动瞬间完全不闪现；其他插件打开的窗口不受本插件控制。
+
+在 `%APPDATA%\obsidian\obsidian.json` 中找到与目标库路径对应的 16 位十六进制 ID，不要用库名称代替。在解压包或源码根目录执行：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows-startup.ps1 -VaultId "替换为16位仓库ID"
 ```
-src/core/       pure logic, no Obsidian imports (fully unit-tested)
-  taskLine.ts   task line parser and serializer (emoji palette, elapsed time)
-  timer.ts      timer sessions, line addressing (line number + exact text)
-  breakLine.ts  the "☕ H:MM:SS" total-break line
-src/settings.ts settings model, migration of old data.json, reset (unit-tested)
-src/SettingDefinitions.ts  the settings described once, as Obsidian 1.13 definitions
-src/SettingsTab.ts  getSettingDefinitions() for 1.13+, a display() adapter for older versions
-src/electron.ts BrowserWindow access: always-on-top, geometry (all guarded)
-src/TimerService.ts  the single running timer, atomic writes via vault.process
-src/StatusBarTimer.ts  the running timer in the main window's status bar
-src/overlay/    popout window controller and the overlay view
-macos/          the standalone SimpleFocus app, unrelated to the plugin build
+
+安装在非默认位置时追加 `-ObsidianExe "D:\Apps\Obsidian\Obsidian.exe"`。脚本只设置当前用户 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 中名为 `PinnedNotesPersonal` 的一项。
+
+登录时通过 `--ppn-background` 和专用 URI 打开目标库，隐藏主窗口与本插件恢复的浮窗；正常手动启动不隐藏。完全退出后不会自行重启，下一次登录再启动。移除自启动：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows-startup.ps1 -Remove
 ```
 
-Put `VAULT_PATH=/path/to/vault` into `.env` and run `npm run install-local`:
-it creates the plugin folder in your vault and symlinks `main.js`,
-`manifest.json` and `styles.css` into it, so `npm run dev` reloads live.
+## 更新、回退和卸载
 
-With the [Obsidian CLI](https://help.obsidian.md/cli) enabled in
-**Settings → General**, a running Obsidian can be driven from the terminal:
+- **更新**：完全退出，下载新包，再运行安装命令。旧插件及启用列表备份到 `<配置目录>/plugin-backups/personal-pinned-notes-时间-随机值/`，脚本输出具体路径。个人 `data.json` 不被覆盖。
+- **回退**：完全退出，将备份 `plugin/` 中四个运行文件复制回插件目录，再启动。通常保留当前 `data.json`；需要旧设置时才单独恢复。安装写入失败会尝试恢复运行文件和启用列表，备份保留。
+- **卸载**：若设置过自启动，先执行 `-Remove`。在 Obsidian 中停用本插件；完全退出后可删除 `plugins/personal-pinned-notes`。这会删除插件设置，不会删除笔记。
 
-```bash
-obsidian plugin:reload id=tasks-for-focus-adhd   # pick up a fresh main.js
-obsidian dev:errors                              # what the plugin logged
-obsidian dev:screenshot path=overlay.png
+## 从源码构建
+
+需要 Git、Node.js 22 或更新版本和 npm。依赖以 `package-lock.json` 为准。
+
+```powershell
+git clone https://github.com/dan9574/always-on-top-personal.git
+cd always-on-top-personal
+npm.cmd ci
+npm.cmd run check
+npm.cmd run lint
+npm.cmd test
+npm.cmd run package
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-install.ps1
 ```
 
-## Attribution
+输出在 `dist/personal-pinned-notes/`，构建不会自动安装。源码根目录也可运行 `scripts/install.ps1`，它优先使用该构建输出。
 
-The `@electron/remote` runtime resolver is adapted from
-[obsidian-synaptic-hatch](https://github.com/especialkim/obsidian-synaptic-hatch)
-(MIT).
+- `src/main.ts`：原生浮窗、工具栏与编辑生命周期。
+- `src/native.ts`、`src/geometry.ts`：窗口桥接、位置及缩放补偿。
+- `src/background.ts`、`src/background-entry.ts`：后台运行、托盘和退出。
+- `src/shortcut.ts`：全局快捷键注册和释放。
+- `src/filter.ts`、`src/completed.ts`：任务显示过滤。
+- `scripts/`：打包、Windows 安装和登录自启动。
+- `tests/`：回归测试；开发细节见 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
-## Also in this repository: SimpleFocus
-
-A native macOS menu bar app with the same idea — a floating task panel above all
-windows — but without Obsidian, and with a true non-activating panel that never
-steals keyboard focus. See [docs/simplefocus.md](docs/simplefocus.md).
-
-## License
-
-[MIT](LICENSE)
+原项目历史保留用于来源追溯；`old/` 是本机忽略的旧源码存档，不上传或打包。本仓库没有自动更新器，也未提交到 Obsidian 社区插件目录；更新使用本仓库 Release。
