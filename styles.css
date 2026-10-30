@@ -74,6 +74,8 @@ body.is-popout-window:has(.ppn-note) .workspace-tab-container { padding: 0; }
 .ppn-toolbar button:hover { background: var(--background-modifier-hover); }
 .ppn-toolbar button .svg-icon { width: 15px; height: 15px; }
 .ppn-toolbar button[aria-pressed="true"] { color: var(--interactive-accent); }
+/* The window toggle is pink while the main window is open. */
+.ppn-toolbar button.ppn-main-toggle[aria-pressed="true"] { color: var(--color-pink, #e6739f); }
 .ppn-toolbar button:focus-visible { outline: 2px solid var(--interactive-accent); }
 .ppn-note .markdown-preview-view.ppn-hide-completed li.task-list-item[data-task="x"],
 .ppn-note .markdown-preview-view.ppn-hide-completed li.task-list-item[data-task="X"] { display: none; }

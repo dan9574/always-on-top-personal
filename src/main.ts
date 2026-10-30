@@ -17,6 +17,8 @@ interface Settings {
   autoHeight: boolean;
 }
 const defaults: Settings = { filePath: "", leafId: "", pinned: true, hideCompleted: false, bounds: null, autoHeight: true };
+/** Main-window events that change whether the toolbar's window toggle shows as open. */
+const MAIN_WINDOW_EVENTS = ["show", "hide", "minimize", "restore"] as const;
 
 export default class PinnedNotesPlugin extends Plugin {
   settings: Settings = { ...defaults };
@@ -26,8 +28,11 @@ export default class PinnedNotesPlugin extends Plugin {
   private quitting = false;
   private leaf: WorkspaceLeaf | null = null;
   private native: NativeWindow | null = null;
+  private mainWindow: NativeWindow | null = null;
+  private readonly onMainVisibility = (): void => this.refreshControls();
   private toolbar: HTMLElement | null = null;
   private titleEl: HTMLElement | null = null;
+  private mainToggle: HTMLButtonElement | null = null;
   private eye: HTMLButtonElement | null = null;
   private pin: HTMLButtonElement | null = null;
   private edit: HTMLButtonElement | null = null;
@@ -57,11 +62,12 @@ export default class PinnedNotesPlugin extends Plugin {
     // The main-process argv flag distinguishes a cold login launch from a normal open.
     this.registerObsidianProtocolHandler("personal-pinned-startup", () => undefined);
     this.installBackground();
+    this.watchMainWindow();
     this.registerEditorExtension(completedFilter);
     this.addRibbonIcon("panels-top-left", "开关置顶笔记 · Ctrl+D", () => this.enqueueToggle());
     // No local hotkey: the OS binding is the only Ctrl+D handler, even inside Obsidian.
     this.addCommand({ id: "toggle-window", name: "开关置顶笔记", callback: () => this.enqueueToggle() });
-    this.addCommand({ id: "show-main-window", name: "显示 Obsidian 主窗口", callback: () => this.background?.showMain() });
+    this.addCommand({ id: "show-main-window", name: "显示 Obsidian 主窗口", callback: () => this.showMainWindow() });
     this.addCommand({ id: "quit-obsidian", name: "完全退出 Obsidian", callback: () => this.enqueueQuit() });
     this.registerEvent(this.app.workspace.on("layout-change", () => this.syncWindow()));
     this.registerEvent(this.app.workspace.on("file-open", () => this.syncWindow()));
@@ -166,6 +172,48 @@ export default class PinnedNotesPlugin extends Plugin {
     }).catch(error => this.report(error));
   }
 
+  /** The main window's own remote handle; its show/hide events keep the toolbar toggle in sync. */
+  private watchMainWindow(): void {
+    try {
+      const main = (window as Window & { electronWindow?: NativeWindow }).electronWindow
+        ?? desktopBridge(window)?.getCurrentWindow?.();
+      if (!main || main.isDestroyed()) return;
+      this.mainWindow = main;
+      for (const event of MAIN_WINDOW_EVENTS) main.on(event, this.onMainVisibility);
+    } catch (error) { this.report(error); }
+  }
+
+  private isMainWindowOpen(): boolean {
+    const main = this.mainWindow;
+    return main !== null && !main.isDestroyed() && main.isVisible() && !main.isMinimized();
+  }
+
+  private showMainWindow(): void {
+    try {
+      if (this.background) {
+        this.background.showMain();
+        return;
+      }
+      // Without the background helper, reach the main window from its own renderer.
+      const main = this.mainWindow;
+      if (!main || main.isDestroyed()) throw new Error("无法连接 Obsidian 主窗口。");
+      if (main.isMinimized()) main.restore();
+      main.show();
+      main.focus();
+    } catch (error) { this.report(error); }
+  }
+
+  /** Toolbar toggle: hide the main window while it is open, otherwise show it. */
+  private toggleMainWindow(): void {
+    try {
+      const main = this.mainWindow;
+      // Hiding is only offered while the tray exists, so the main window can always be brought back.
+      if (this.background && main && !main.isDestroyed() && this.isMainWindowOpen()) main.hide();
+      else this.showMainWindow();
+      this.refreshControls();
+    } catch (error) { this.report(error); }
+  }
+
   private async openWindow(): Promise<void> {
     const remembered = this.app.vault.getAbstractFileByPath(this.settings.filePath);
     const active = this.app.workspace.getActiveFile();
@@ -260,6 +308,8 @@ export default class PinnedNotesPlugin extends Plugin {
       this.scheduleFit();
       void this.persist().catch(error => this.report(error));
     });
+    this.mainToggle = this.button("app-window", "显示 Obsidian 主窗口", () => this.toggleMainWindow());
+    this.mainToggle.addClass("ppn-main-toggle");
     this.edit = this.button("pencil", "切换编辑模式", () => { void this.toggleMode().catch(error => this.report(error)); });
     this.eye = this.button("eye", "隐藏已完成任务", () => {
       this.settings.hideCompleted = !this.settings.hideCompleted;
@@ -410,6 +460,13 @@ export default class PinnedNotesPlugin extends Plugin {
       this.edit.setAttribute("title", label);
       this.edit.setAttribute("aria-pressed", String(editing));
     }
+    if (this.mainToggle) {
+      const open = this.isMainWindowOpen();
+      const label = open && this.background ? "隐藏 Obsidian 主窗口" : "显示 Obsidian 主窗口";
+      this.mainToggle.setAttribute("aria-label", label);
+      this.mainToggle.setAttribute("title", label);
+      this.mainToggle.setAttribute("aria-pressed", String(open));
+    }
     if (this.titleEl) {
       this.titleEl.textContent = view.file?.basename ?? "置顶笔记";
       this.titleEl.title = `${view.file?.path ?? ""} · ${this.shortcutStatus} · 双击标题恢复自动高度`;
@@ -447,6 +504,7 @@ export default class PinnedNotesPlugin extends Plugin {
     this.toolbar?.remove();
     this.toolbar = null;
     this.titleEl = null;
+    this.mainToggle = null;
     this.eye = null;
     this.pin = null;
     this.edit = null;
@@ -468,6 +526,10 @@ export default class PinnedNotesPlugin extends Plugin {
     this.rememberBounds();
     this.stopLayout?.();
     this.disposed = true;
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      for (const event of MAIN_WINDOW_EVENTS) this.mainWindow.removeListener(event, this.onMainVisibility);
+    }
+    this.mainWindow = null;
     this.background?.dispose();
     this.background = null;
     this.binding?.dispose();
