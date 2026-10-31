@@ -1,6 +1,6 @@
 # 开发状态
 
-当前插件：Pinned Notes Personal，ID `personal-pinned-notes`，版本 `0.1.0`。
+当前插件：Pinned Notes Personal，ID `personal-pinned-notes`，版本 `0.1.1`。
 
 开发分支仍为 `personal/main`，历史起点为原项目 0.7.0；新入口和功能实现位于根目录 src，旧源码及工作流已归档到 old 并忽略。保留 MIT 许可证和来源说明。
 
@@ -27,5 +27,7 @@
 后台版本验收：主窗口 × 后从记事本 Ctrl+D 首次打开可正常渲染；连续开关复用同一原生窗口，主窗口保持隐藏；后台编辑可见 Office Flow 控件，编辑模式关闭重开回到只读；浮窗右键可恢复主窗口或完全退出。最终版本完全退出后实际检查 Obsidian 进程数为 0。类型检查、ESLint、27 项测试与打包通过。
 
 登录自启版本：脚本仅设置当前用户 Run/PinnedNotesPersonal，使用独立启动参数和专用 Obsidian URI 定位仓库。后台模块在插件 onload 尽早安装，冷启动参数只对每个主窗口消费一次；主窗口 show 事件在首次主动恢复前被隐藏，手动启动不隐藏。恢复个人浮窗时跳过 show/focus。29 项测试、类型检查、ESLint 和打包通过；冷启动实测尚未完成，不能承诺插件加载之前完全无闪现。
+
+2026-10-30（0.1.1）：浮窗标题栏新增主窗口开关按钮（`app-window` 图标，排在铅笔前）。主窗口可见且未最小化时按钮为粉色（`--color-pink`），再按一下直接 `main.hide()`，与主窗口 × 后的状态一致；隐藏或最小化时按下走 `showMainWindow()`：优先 `background.showMain()`，后台模块不可用时直接 restore / show / focus。只有后台模块（托盘）装上时才允许隐藏。通过 `window.electronWindow` 监听主窗口 show / hide / minimize / restore 同步按钮状态，停用时移除监听。命令"显示 Obsidian 主窗口"同样走 `showMainWindow()`。类型检查、ESLint、29 项测试和生产打包通过；按钮本身未加自动测试，需在 Windows 实测：点击前置主窗口、再点隐藏、× 关闭主窗口后按钮变灰。
 
 公开发行准备：README 提供 AI 安装约定和无需 Node.js 的 Windows Release 安装步骤。scripts/install.ps1 支持预览、自定义配置目录、旧插件备份、保留个人设置、追加启用列表及写入失败回退。scripts/test-install.ps1 在独立临时目录模拟已退出 / 正在运行的宿主，验证安装行为，不操作真实笔记库。发行包必须包含 background.cjs 及安装、自启动脚本；只上传新发布标签，不推送上游旧版本标签。
